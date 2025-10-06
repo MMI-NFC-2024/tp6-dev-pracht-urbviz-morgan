@@ -1,0 +1,202 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import PlotFigure from "../../components/PlotFigure.astro";
+import * as Plot from "@observablehq/plot";
+import pizza from "../../assets/pizza.json";
+
+function toSlug(value) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+const pizzaData = pizza.map((entry) => ({
+  ...entry,
+  dateObj: new Date(entry.date),
+}));
+
+pizzaData.sort((a, b) => a.dateObj - b.dateObj);
+
+const locations = [...new Set(pizzaData.map((entry) => entry.location))];
+const locationData = locations.map((location) => {
+  const records = pizzaData
+    .filter((entry) => entry.location === location)
+    .sort((a, b) => a.dateObj - b.dateObj);
+  return {
+    location,
+    slug: toSlug(location),
+    records,
+    summary: {
+      days: records.length,
+      firstDate: records.length ? records[0].dateObj : null,
+      lastDate: records.length ? records[records.length - 1].dateObj : null,
+    },
+  };
+});
+
+const globalPlotOptions = {
+  grid: true,
+  title: "Daily max temperature by location",
+  marks: [
+    Plot.line(pizzaData, {
+      x: "dateObj",
+      y: "temp_max",
+      stroke: "location",
+      tip: true,
+      curve: "catmull-rom",
+    }),
+  ],
+  x: { label: "Date" },
+  y: { label: "Max temperature (C)" },
+};
+---
+
+<Layout title="Pizza dataset overview">
+  <h1 class="text-2xl mb-4">Pizza dataset overview</h1>
+
+  <section class="mb-10">
+    <h2 class="text-xl mb-2">Global trend</h2>
+    <PlotFigure options={globalPlotOptions} />
+  </section>
+
+  <section>
+    <h2 class="text-xl mb-4">Locations in detail</h2>
+    <p class="mb-4 text-sm text-gray-600">
+      Browse each location to compare temperature profiles.
+    </p>
+    <div class="location-slider">
+      {locationData.map(({ location, slug, records, summary }) => (
+        <article class="location-card" data-location={location}>
+          <header class="location-card-header">
+            <h3 class="text-lg font-semibold">{location}</h3>
+            <p class="text-sm text-gray-600">
+              {summary.days} day(s) from {summary.firstDate?.toLocaleDateString()} to {summary.lastDate?.toLocaleDateString()}
+            </p>
+          </header>
+
+          <PlotFigure
+            options={{
+              grid: true,
+              title: `Daily min/max temperature in ${location}`,
+              marks: [
+                Plot.line(records, {
+                  x: "dateObj",
+                  y: "temp_max",
+                  stroke: "#ef4444",
+                  strokeWidth: 2,
+                  curve: "catmull-rom",
+                  tip: true,
+                }),
+                Plot.line(records, {
+                  x: "dateObj",
+                  y: "temp_min",
+                  stroke: "#3b82f6",
+                  strokeDash: "4,2",
+                  strokeWidth: 2,
+                  curve: "catmull-rom",
+                  tip: true,
+                }),
+              ],
+              x: { label: "Date" },
+              y: { label: "Temperature (C)" },
+            }}
+          />
+
+          <PlotFigure
+            options={{
+              grid: true,
+              title: `Wind vs precipitation in ${location}`,
+              marks: [
+                Plot.dot(records, {
+                  x: "wind",
+                  y: "precipitation",
+                  fill: "weather",
+                  r: 5,
+                  fillOpacity: 0.7,
+                  tip: true,
+                }),
+              ],
+              x: { label: "Wind (m/s)" },
+              y: { label: "Precipitation (mm)" },
+            }}
+          />
+
+          <footer class="location-links">
+            <a class="text-blue-600 hover:underline" href={`/pizza/rendu-dynamique/${slug}`}>
+              Page dynamique
+            </a>
+            <a class="text-blue-600 hover:underline" href={`/pizza/rendu-statique/${slug}`}>
+              Page statique
+            </a>
+          </footer>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="mt-10">
+    <h2 class="text-xl mb-2">Acces rapides</h2>
+    <ul class="list-disc pl-5 space-y-1">
+      <li>
+        <a class="text-blue-600 hover:underline" href="/pizza/rendu-dynamique">
+          Index des pages dynamiques par location
+        </a>
+      </li>
+      <li>
+        <a class="text-blue-600 hover:underline" href="/pizza/rendu-statique">
+          Index des pages statiques par location
+        </a>
+      </li>
+    </ul>
+  </section>
+
+  <style>
+    .location-slider {
+      display: flex;
+      gap: 1.5rem;
+      overflow-x: auto;
+      padding-bottom: 0.75rem;
+      scroll-snap-type: x mandatory;
+    }
+
+    .location-card {
+      min-width: min(420px, 90vw);
+      flex: 0 0 auto;
+      border: 1px solid #d1d5db;
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      background: #ffffff;
+      scroll-snap-align: start;
+      box-shadow: 0 10px 15px -5px rgba(15, 23, 42, 0.2);
+      display: grid;
+      gap: 1rem;
+    }
+
+    .location-card-header {
+      display: grid;
+      gap: 0.25rem;
+    }
+
+    .location-links {
+      display: flex;
+      justify-content: flex-start;
+      gap: 1.25rem;
+      font-size: 0.875rem;
+    }
+
+    .location-slider::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .location-slider::-webkit-scrollbar-track {
+      background: #f3f4f6;
+      border-radius: 9999px;
+    }
+
+    .location-slider::-webkit-scrollbar-thumb {
+      background: #9ca3af;
+      border-radius: 9999px;
+    }
+  </style>
+</Layout>

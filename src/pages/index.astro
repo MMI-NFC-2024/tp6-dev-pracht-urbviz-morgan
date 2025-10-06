@@ -3,19 +3,122 @@ import PlotFigure from "../components/PlotFigure.astro";
 import Layout from "../layouts/Layout.astro";
 import * as Plot from "@observablehq/plot";
 import penguins from "../assets/penguins.json";
+
+const speciesList = [...new Set(penguins.map((penguin) => penguin.species))];
+const speciesData = speciesList.map((species) => ({
+  species,
+  data: penguins.filter((penguin) => penguin.species === species),
+}));
+
+const globalPlotOptions = {
+  grid: true,
+  title: "Culmen length vs depth for all species",
+  marks: [
+    Plot.dot(penguins, {
+      x: "culmen_length_mm",
+      y: "culmen_depth_mm",
+      fill: "species",
+      r: 5,
+      fillOpacity: 0.75,
+    }),
+  ],
+  x: {
+    label: "Culmen length (mm)",
+  },
+  y: {
+    label: "Culmen depth (mm)",
+  },
+};
 ---
 
 <Layout>
-  <h1 class="text-2xl">Test Astro et Plot (Observablehq)</h1>
-  <PlotFigure
-    options={{
-      marks: [
-        Plot.dot(penguins, {
-          x: "culmen_length_mm",
-          y: "culmen_depth_mm",
-          stroke: "species",
-        }),
-      ],
-    }}
-  />
+  <h1 class="text-2xl mb-4">Visualisation des pingouins</h1>
+
+  <section class="mb-10">
+    <h2 class="text-xl mb-2">Vue globale</h2>
+    <PlotFigure options={globalPlotOptions} />
+  </section>
+
+  <section>
+    <h2 class="text-xl mb-4">Especes en detail</h2>
+    <p class="mb-4 text-sm text-gray-600">
+      Faites defiler horizontalement pour parcourir les especes.
+    </p>
+    <div class="species-slider">
+      {speciesData.map(({ species, data }) => (
+        <article class="species-card" data-species={species}>
+          <h3 class="text-lg font-semibold mb-2">{species}</h3>
+          <p class="mb-2 text-sm">{data.length} pingouin(s) pour cette espece.</p>
+          <PlotFigure
+            options={{
+              grid: true,
+              title: `Culmen length vs depth for ${species}`,
+              marks: [
+                Plot.dot(data, {
+                  x: "culmen_length_mm",
+                  y: "culmen_depth_mm",
+                  fill: "sex",
+                  r: 5,
+                  fillOpacity: 0.75,
+                }),
+              ],
+              x: { label: "Culmen length (mm)" },
+              y: { label: "Culmen depth (mm)" },
+            }}
+          />
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="mt-10">
+    <h2 class="text-xl mb-2">Pages dediees</h2>
+    <ul class="list-disc pl-5 space-y-1">
+      <li>
+        <a class="text-blue-600 hover:underline" href="/rendu-dynamique">
+          Rendu dynamique par espece
+        </a>
+      </li>
+      <li>
+        <a class="text-blue-600 hover:underline" href="/rendu-statique">
+          Rendu statique par espece
+        </a>
+      </li>
+    </ul>
+  </section>
+
+  <style>
+    .species-slider {
+      display: flex;
+      gap: 1.5rem;
+      overflow-x: auto;
+      padding-bottom: 0.5rem;
+      scroll-snap-type: x mandatory;
+    }
+
+    .species-card {
+      min-width: min(350px, 85vw);
+      flex: 0 0 auto;
+      border: 1px solid #d1d5db;
+      border-radius: 0.75rem;
+      padding: 1rem;
+      background: #ffffff;
+      scroll-snap-align: start;
+      box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.1);
+    }
+
+    .species-slider::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .species-slider::-webkit-scrollbar-track {
+      background: #f3f4f6;
+      border-radius: 9999px;
+    }
+
+    .species-slider::-webkit-scrollbar-thumb {
+      background: #9ca3af;
+      border-radius: 9999px;
+    }
+  </style>
 </Layout>

@@ -1,0 +1,21 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import penguins from "../../assets/penguins.json";
+
+const speciesList = [...new Set(penguins.map((penguin) => penguin.species))];
+---
+
+<Layout title="Rendu statique">
+  <h1>Rendu statique</h1>
+  <p>Selectionne une espece de pingouin :</p>
+
+  <ul class="list-disc pl-5 space-y-1">
+    {speciesList.map((species) => (
+      <li>
+        <a class="text-blue-600 hover:underline" href={`/rendu-statique/${species}`}>
+          {species}
+        </a>
+      </li>
+    ))}
+  </ul>
+</Layout>

@@ -1,0 +1,100 @@
+---
+import Layout from "../../../layouts/Layout.astro";
+import PlotFigure from "../../../components/PlotFigure.astro";
+import * as Plot from "@observablehq/plot";
+import pizza from "../../../assets/pizza.json";
+
+export const prerender = false;
+
+function toSlug(value) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+const { location: slug } = Astro.params;
+
+const locationName = [...new Set(pizza.map((entry) => entry.location))].find(
+  (name) => toSlug(name) === slug
+);
+
+const records = pizza
+  .filter((entry) => toSlug(entry.location) === slug)
+  .map((entry) => ({
+    ...entry,
+    dateObj: new Date(entry.date),
+  }))
+  .sort((a, b) => a.dateObj - b.dateObj);
+
+const hasData = records.length > 0;
+
+const plotOptions = {
+  grid: true,
+  title: locationName
+    ? `Temperature profile for ${locationName}`
+    : "Temperature profile",
+  marks: [
+    Plot.line(records, {
+      x: "dateObj",
+      y: "temp_max",
+      stroke: "#ef4444",
+      strokeWidth: 2,
+      tip: true,
+      curve: "catmull-rom",
+    }),
+    Plot.line(records, {
+      x: "dateObj",
+      y: "temp_min",
+      stroke: "#3b82f6",
+      strokeDash: "4,2",
+      strokeWidth: 2,
+      tip: true,
+      curve: "catmull-rom",
+    }),
+  ],
+  x: { label: "Date" },
+  y: { label: "Temperature (C)" },
+};
+
+const precipitationOptions = {
+  grid: true,
+  title: locationName
+    ? `Precipitation and wind for ${locationName}`
+    : "Precipitation and wind",
+  marks: [
+    Plot.dot(records, {
+      x: "wind",
+      y: "precipitation",
+      fill: "weather",
+      r: 5,
+      fillOpacity: 0.7,
+      tip: true,
+    }),
+  ],
+  x: { label: "Wind (m/s)" },
+  y: { label: "Precipitation (mm)" },
+};
+---
+
+<Layout title={locationName ? `Pizza dynamique - ${locationName}` : "Pizza dynamique"}>
+  <h1>{locationName ?? "Location inconnue"}</h1>
+
+  {hasData && (
+    <>
+      <p>{records.length} enregistrement(s) pour cette location.</p>
+      <PlotFigure options={plotOptions} />
+      <PlotFigure options={precipitationOptions} />
+    </>
+  )}
+
+  {!hasData && (
+    <p>Aucune donnee trouvee pour cette location.</p>
+  )}
+
+  <p class="mt-4">
+    <a class="text-blue-600 hover:underline" href="/pizza/rendu-dynamique">
+      Retour a la liste
+    </a>
+  </p>
+</Layout>

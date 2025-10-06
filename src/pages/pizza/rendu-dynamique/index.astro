@@ -1,0 +1,32 @@
+---
+import Layout from "../../../layouts/Layout.astro";
+import pizza from "../../../assets/pizza.json";
+
+function toSlug(value) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+const locations = [...new Set(pizza.map((entry) => entry.location))];
+const links = locations.map((location) => ({
+  location,
+  slug: toSlug(location),
+}));
+---
+
+<Layout title="Pizza dynamique">
+  <h1>Pizza dynamique</h1>
+  <p>Choisis une location pour voir la page dynamique associee.</p>
+
+  <ul class="list-disc pl-5 space-y-1">
+    {links.map(({ location, slug }) => (
+      <li>
+        <a class="text-blue-600 hover:underline" href={`/pizza/rendu-dynamique/${slug}`}>
+          {location}
+        </a>
+      </li>
+    ))}
+  </ul>
+</Layout>

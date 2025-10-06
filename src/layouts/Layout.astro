@@ -1,26 +1,167 @@
 ---
 import "../styles/global.css";
+
+const { title = "Visualisation des pingouins" } = Astro.props;
+
+const navGroups = [
+  {
+    label: "Pingouins",
+    links: [
+      { href: "/", text: "Accueil" },
+      { href: "/rendu-dynamique", text: "Rendu dynamique" },
+      { href: "/rendu-statique", text: "Rendu statique" },
+    ],
+  },
+  {
+    label: "Pizza",
+    links: [
+      { href: "/pizza", text: "Pizza global" },
+      { href: "/pizza/rendu-dynamique", text: "Pizza dynamique" },
+      { href: "/pizza/rendu-statique", text: "Pizza statique" },
+    ],
+  },
+];
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
-    <title>Astro Basics</title>
+    <title>{title}</title>
   </head>
   <body>
-    <slot />
+    <header class="site-header">
+      <nav class="site-nav">
+        <a class="site-brand" href="/">Datasets</a>
+        <div class="site-nav-groups">
+          {navGroups.map((group) => (
+            <div class="site-nav-group">
+              <span class="site-nav-label">{group.label}</span>
+              <ul>
+                {group.links.map((link) => (
+                  <li>
+                    <a href={link.href}>{link.text}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </nav>
+    </header>
+
+    <main class="site-main">
+      <div class="site-container">
+        <slot />
+      </div>
+    </main>
   </body>
 </html>
 
 <style>
-  html,
+  :root {
+    color-scheme: light dark;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8fafc;
+    color: #0f172a;
+  }
+
   body {
     margin: 0;
-    width: 100%;
-    height: 100%;
+  }
+
+  .site-header {
+    background: #1d4ed8;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.15);
+  }
+
+  .site-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0.75rem 1.25rem;
+    gap: 1.5rem;
+  }
+
+  .site-nav-groups {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .site-nav-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .site-nav-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.8;
+  }
+
+  .site-nav ul {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 0.75rem;
+  }
+
+  .site-nav a {
+    color: inherit;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .site-nav a:hover,
+  .site-nav a:focus {
+    text-decoration: underline;
+  }
+
+  .site-brand {
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  .site-main {
+    padding: 2rem 1rem 3rem;
+  }
+
+  .site-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: #ffffff;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 15px 30px -15px rgba(15, 23, 42, 0.2);
+  }
+
+  @media (max-width: 640px) {
+    .site-nav {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .site-nav-groups {
+      width: 100%;
+    }
+
+    .site-nav ul {
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .site-container {
+      padding: 1.5rem;
+    }
   }
 </style>

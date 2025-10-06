@@ -1,0 +1,52 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import PlotFigure from "../../components/PlotFigure.astro";
+import * as Plot from "@observablehq/plot";
+import penguins from "../../assets/penguins.json";
+
+export async function getStaticPaths() {
+  const speciesList = [...new Set(penguins.map((penguin) => penguin.species))];
+  return speciesList.map((species) => ({ params: { species } }));
+}
+
+const { species } = Astro.params;
+const data = penguins.filter((penguin) => penguin.species === species);
+const hasData = data.length > 0;
+
+const plotOptions = {
+  grid: true,
+  title: `Culmen length vs depth for ${species}`,
+  marks: [
+    Plot.dot(data, {
+      x: "culmen_length_mm",
+      y: "culmen_depth_mm",
+      fill: "sex",
+      r: 5,
+      fillOpacity: 0.75,
+    }),
+  ],
+  x: {
+    label: "Culmen length (mm)",
+  },
+  y: {
+    label: "Culmen depth (mm)",
+  },
+};
+---
+
+<Layout title={`Espece : ${species}`}>
+  <h1>{species}</h1>
+
+  {hasData && (
+    <div>
+      <p>{data.length} pingouin(s) pour cette espece.</p>
+      <PlotFigure options={plotOptions} />
+    </div>
+  )}
+
+  {!hasData && <p>Aucun pingouin trouve pour cette espece.</p>}
+
+  <p class="mt-4">
+    <a class="text-blue-600 hover:underline" href="/rendu-statique">Retour a la liste</a>
+  </p>
+</Layout>
